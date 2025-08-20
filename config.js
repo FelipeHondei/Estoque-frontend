@@ -1,1 +1,1 @@
-window.API_BASE_URL = "https://estoque-xpb2.onrender.com/";
+window.API_BASE_URL = "https://estoque-xpb2.onrender.com";
