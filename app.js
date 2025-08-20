@@ -16,13 +16,14 @@
 	const saveButton = document.getElementById("saveButton");
 	const editingIdInput = document.getElementById("editingId");
 	
-	let API_BASE = (window.API_BASE_URL || localStorage.getItem("apiBaseUrl") || "http://127.0.0.1:8000").replace(/\/$/, "");
+	let API_BASE = (window.API_BASE_URL || localStorage.getItem("apiBaseUrl") || "https:\/\/estoque-xpb2.onrender.com").replace(/\/$/, "");
+	if (!localStorage.getItem("apiBaseUrl")) { try { localStorage.setItem("apiBaseUrl", API_BASE); } catch {} }
 	if (apiBaseInput) apiBaseInput.value = API_BASE;
 	if (saveApiBaseBtn) {
 		saveApiBaseBtn.addEventListener("click", () => {
 			API_BASE = (apiBaseInput.value || "").trim().replace(/\/$/, "");
 			if (!API_BASE) return;
-			localStorage.setItem("apiBaseUrl", API_BASE);
+			try { localStorage.setItem("apiBaseUrl", API_BASE); } catch {}
 			loadProducts();
 		});
 	}
@@ -147,7 +148,7 @@
 			products = await api('/products');
 			renderProducts(products);
 		} catch (e) {
-			productsEl.innerHTML = `<div style="opacity:.7">${e.message}</div>`;
+			productsEl.innerHTML = `<div style=\"opacity:.7\">${e.message}</div>`;
 		}
 	}
 	
@@ -161,36 +162,36 @@
 			const el = document.createElement("article");
 			el.className = "product-card";
 			el.innerHTML = `
-				<div class="product-media">${escapeHtml((p.name || 'P').charAt(0))}</div>
-				<div class="product-body">
-					<div class="product-header">
-						<div class="product-info">
-							<div class="product-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
-							<div class="product-meta">SKU: ${escapeHtml(p.sku)}<br>Preço: R$ ${Number(p.price).toFixed(2)}</div>
+				<div class=\"product-media\">${escapeHtml((p.name || 'P').charAt(0))}</div>
+				<div class=\"product-body\">
+					<div class=\"product-header\">
+						<div class=\"product-info\">
+							<div class=\"product-title\" title=\"${escapeHtml(p.name)}\">${escapeHtml(p.name)}</div>
+							<div class=\"product-meta\">SKU: ${escapeHtml(p.sku)}<br>Preço: R$ ${Number(p.price).toFixed(2)}</div>
 						</div>
-						<div class="product-menu">
-							<button class="button small" data-act="edit" title="Editar produto">✏️</button>
-							<button class="button small danger" data-act="del" title="Excluir produto">🗑️</button>
+						<div class=\"product-menu\">
+							<button class=\"button small\" data-act=\"edit\" title=\"Editar produto\">✏️</button>
+							<button class=\"button small danger\" data-act=\"del\" title=\"Excluir produto\">🗑️</button>
 						</div>
 					</div>
-					<div class="product-actions">
-						<div class="qty-section">
-							<span class="tag">Estoque: <strong>${p.quantity}</strong></span>
+					<div class=\"product-actions\">
+						<div class=\"qty-section\">
+							<span class=\"tag\">Estoque: <strong>${p.quantity}</strong></span>
 						</div>
-						<div class="qty-controls">
-							<div class="qty-inputs">
-								<div class="input-group">
-									<label class="input-label">Ajuste de quantidade</label>
-									<input type="number" step="1" placeholder="Ex: +5 ou -3" />
+						<div class=\"qty-controls\">
+							<div class=\"qty-inputs\">
+								<div class=\"input-group\">
+									<label class=\"input-label\">Ajuste de quantidade</label>
+									<input type=\"number\" step=\"1\" placeholder=\"Ex: +5 ou -3\" />
 								</div>
-								<div class="input-group">
-									<label class="input-label">Motivo (opcional)</label>
-									<input type="text" placeholder="Ex: Reposição, Venda..." />
+								<div class=\"input-group\">
+									<label class=\"input-label\">Motivo (opcional)</label>
+									<input type=\"text\" placeholder=\"Ex: Reposição, Venda...\" />
 								</div>
 							</div>
-							<div class="action-buttons">
-								<button class="button success small" data-act="adjust">✓ Ajustar</button>
-								<button class="button small" data-act="txs">📊 Histórico</button>
+							<div class=\"action-buttons\">
+								<button class=\"button success small\" data-act=\"adjust\">✓ Ajustar</button>
+								<button class=\"button small\" data-act=\"txs\">📊 Histórico</button>
 							</div>
 						</div>
 					</div>
@@ -229,3 +230,4 @@
 	// Carregar produtos iniciais
 	loadProducts();
 })();
+  
