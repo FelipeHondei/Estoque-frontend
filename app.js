@@ -229,4 +229,3 @@
 	// Carregar produtos iniciais
 	loadProducts();
 })();
-  
