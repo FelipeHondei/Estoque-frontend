@@ -316,7 +316,6 @@
 
     // Validação básica
     if (!data.name || !data.sku) {
-      showNotification("Nome e SKU são obrigatórios", "error");
       return;
     }
 
