@@ -639,6 +639,7 @@ main {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  position: relative;
 }
 
 .form-group label {
@@ -654,6 +655,8 @@ main {
   border-radius: 10px;
   border: 1px solid var(--border);
   font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group textarea {
@@ -667,26 +670,132 @@ main {
 
 .sale-items h4 {
   margin: 0 0 12px 0;
+  font-size: 16px;
 }
 
+.sale-items-container {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  padding: 2px;
+}
+
+.sale-items-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sale-items-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.sale-items-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.sale-items-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .sale-items-container {
+    max-height: 250px;
+  }
+}
+
+/* Autocomplete/Dropdown para produtos */
+.product-autocomplete {
+  position: relative;
+}
+
+.product-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.product-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background-color 0.2s;
+  font-size: 13px;
+}
+
+.product-dropdown-item:hover,
+.product-dropdown-item.highlighted {
+  background: #f8fafc;
+}
+
+.product-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.product-dropdown-item .product-name {
+  font-weight: 600;
+  color: var(--black);
+}
+
+.product-dropdown-item .product-details {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Sale Items Layout Responsivo */
 .sale-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr auto;
-  gap: 12px;
-  align-items: center;
+  grid-template-columns: 2fr 80px 80px 80px auto;
+  gap: 8px;
+  align-items: start;
   padding: 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
   margin-bottom: 8px;
   background: #f9fafb;
+  position: relative;
+}
+
+.sale-item-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sale-item-field label {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .sale-item input,
 .sale-item select {
   padding: 8px;
-  border-radius: 8px;
+  border-radius: 6px;
   border: 1px solid var(--border);
-  font-size: 14px;
+  font-size: 13px;
+  background: white;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sale-item input:focus,
+.sale-item select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.1);
 }
 
 .sale-item .remove-item {
@@ -694,10 +803,30 @@ main {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: 11px;
   white-space: nowrap;
+  height: fit-content;
+  margin-top: 16px;
+  font-weight: 600;
+}
+
+.sale-item .remove-item:hover {
+  background: #dc2626;
+}
+
+/* Responsividade para Sale Items */
+@media (max-width: 1024px) {
+  .sale-item {
+    grid-template-columns: 1.5fr 70px 70px 70px auto;
+    gap: 6px;
+  }
+  
+  .sale-item input {
+    font-size: 12px;
+    padding: 6px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -707,14 +836,69 @@ main {
   }
   
   .sale-item {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 8px;
-    text-align: left;
+    padding: 10px;
+  }
+  
+  .sale-item-field:first-child {
+    grid-column: 1 / -1;
   }
   
   .sale-item .remove-item {
+    grid-column: 1 / -1;
+    margin-top: 8px;
     justify-self: start;
     width: fit-content;
+  }
+}
+
+@media (max-width: 640px) {
+  .sale-items h4 {
+    font-size: 14px;
+  }
+  
+  .sale-item {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 8px;
+  }
+  
+  .sale-item-field {
+    gap: 2px;
+  }
+  
+  .sale-item-field label {
+    font-size: 10px;
+  }
+  
+  .sale-item input {
+    font-size: 11px;
+    padding: 5px;
+  }
+  
+  .sale-item .remove-item {
+    margin-top: 4px;
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 8px;
+    font-size: 13px;
+  }
+  
+  .form-group textarea {
+    min-height: 60px;
+  }
+  
+  .product-dropdown-item {
+    padding: 8px 10px;
+    font-size: 12px;
   }
 }
 
