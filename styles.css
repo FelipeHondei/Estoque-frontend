@@ -125,24 +125,24 @@ header h1 {
   header {
     padding: 10px 15px;
   }
-  
+
   .header-actions {
     flex-direction: column;
     align-items: stretch;
     width: 100%;
     gap: 8px;
   }
-  
+
   .api-config {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .api-config input {
     width: 100%;
     min-width: auto;
   }
-  
+
   .button {
     padding: 8px 12px;
     font-size: 13px;
@@ -153,7 +153,7 @@ header h1 {
   header h1 {
     font-size: 16px;
   }
-  
+
   .logo {
     font-size: 18px;
   }
@@ -183,7 +183,7 @@ main {
   main {
     padding: 15px;
   }
-  
+
   .toolbar h2 {
     font-size: 18px;
   }
@@ -330,20 +330,20 @@ main {
   .product-media {
     font-size: 1.8em;
   }
-  
+
   .product-title {
     font-size: 15px;
   }
-  
+
   .product-meta {
     font-size: 12px;
   }
-  
+
   .qty-actions {
     grid-template-columns: 1fr;
     gap: 4px;
   }
-  
+
   .qty-actions input,
   .qty-actions button {
     grid-column: 1;
@@ -351,7 +351,7 @@ main {
     min-height: 30px;
     padding: 4px 6px;
   }
-  
+
   .qty-actions .button.danger {
     margin-top: 2px;
   }
@@ -361,28 +361,28 @@ main {
   .product-card {
     grid-template-rows: 140px auto;
   }
-  
+
   .product-media {
     font-size: 1.6em;
   }
-  
+
   .product-body {
     padding: 10px;
   }
-  
+
   .product-title {
     font-size: 14px;
   }
-  
+
   .product-meta {
     font-size: 11px;
   }
-  
+
   .tag {
     font-size: 11px;
     padding: 3px 8px;
   }
-  
+
   .qty-actions input,
   .qty-actions button {
     font-size: 10px;
@@ -395,29 +395,29 @@ main {
   .product-card {
     grid-template-rows: 120px auto;
   }
-  
+
   .product-media {
     font-size: 1.4em;
   }
-  
+
   .product-body {
     padding: 8px;
     gap: 4px;
   }
-  
+
   .product-title {
     font-size: 13px;
   }
-  
+
   .product-meta {
     font-size: 10px;
   }
-  
+
   .tag {
     font-size: 10px;
     padding: 2px 6px;
   }
-  
+
   .qty-actions input,
   .qty-actions button {
     font-size: 9px;
@@ -476,12 +476,12 @@ main {
   .summary-card {
     padding: 16px;
   }
-  
+
   .summary-grid {
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 12px;
   }
-  
+
   .summary-item .value {
     font-size: 20px;
   }
@@ -491,16 +491,16 @@ main {
   .summary-card {
     padding: 12px;
   }
-  
+
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
-  
+
   .summary-item .label {
     font-size: 12px;
   }
-  
+
   .summary-item .value {
     font-size: 18px;
   }
@@ -600,24 +600,24 @@ main {
   .modal {
     padding: 8px;
   }
-  
+
   .modal-content {
     width: 100%;
     max-width: none;
     border-radius: 12px;
     padding: 12px;
   }
-  
+
   .form-grid {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .modal-actions {
     flex-direction: column;
     gap: 6px;
   }
-  
+
   .modal-actions .button {
     width: 100%;
   }
@@ -822,7 +822,7 @@ main {
     grid-template-columns: 1.5fr 70px 70px 70px auto;
     gap: 6px;
   }
-  
+
   .sale-item input {
     font-size: 12px;
     padding: 6px;
@@ -834,17 +834,17 @@ main {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .sale-item {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     padding: 10px;
   }
-  
+
   .sale-item-field:first-child {
     grid-column: 1 / -1;
   }
-  
+
   .sale-item .remove-item {
     grid-column: 1 / -1;
     margin-top: 8px;
@@ -857,26 +857,26 @@ main {
   .sale-items h4 {
     font-size: 14px;
   }
-  
+
   .sale-item {
     grid-template-columns: 1fr;
     gap: 6px;
     padding: 8px;
   }
-  
+
   .sale-item-field {
     gap: 2px;
   }
-  
+
   .sale-item-field label {
     font-size: 10px;
   }
-  
+
   .sale-item input {
     font-size: 11px;
     padding: 5px;
   }
-  
+
   .sale-item .remove-item {
     margin-top: 4px;
     padding: 4px 6px;
@@ -891,11 +891,11 @@ main {
     padding: 8px;
     font-size: 13px;
   }
-  
+
   .form-group textarea {
     min-height: 60px;
   }
-  
+
   .product-dropdown-item {
     padding: 8px 10px;
     font-size: 12px;
@@ -929,11 +929,11 @@ main {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .modal-actions .button {
     width: 100%;
   }
-  
+
   .total-row {
     font-size: 16px;
   }
