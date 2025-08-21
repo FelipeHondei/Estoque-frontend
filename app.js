@@ -341,7 +341,6 @@
         });
 
         console.log("Resposta da edição:", response);
-        showNotification("Produto atualizado com sucesso!");
       } else {
         const createPayload = {
           ...payload,
@@ -369,7 +368,6 @@
   saleForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (saleItems.length === 0) {
-      showNotification("Adicione pelo menos um item à venda", "error");
       return;
     }
 
@@ -404,7 +402,6 @@
 
     try {
       await api("/sales", { method: "POST", body: JSON.stringify(saleData) });
-      showNotification("Venda realizada com sucesso!");
       closeSaleModal();
       loadProducts();
       loadFinancialSummary();
@@ -575,7 +572,6 @@
         async () => {
           const change = parseInt(qtyInput.value, 10);
           if (Number.isNaN(change) || change === 0) {
-            showNotification("Informe uma quantidade diferente de 0", "error");
             return;
           }
           try {
@@ -587,9 +583,6 @@
               }),
             });
             loadProducts();
-            showNotification(
-              `Estoque ajustado em ${change > 0 ? "+" : ""}${change} unidades`
-            );
           } catch (e) {
             showNotification(e.message, "error");
           }
