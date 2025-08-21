@@ -35,7 +35,7 @@
   if (!localStorage.getItem("apiBaseUrl")) {
     try {
       localStorage.setItem("apiBaseUrl", API_BASE);
-    } catch {}
+    } catch { }
   }
   if (apiBaseInput) apiBaseInput.value = API_BASE;
   if (saveApiBaseBtn) {
@@ -44,7 +44,7 @@
       if (!API_BASE) return;
       try {
         localStorage.setItem("apiBaseUrl", API_BASE);
-      } catch {}
+      } catch { }
       loadProducts();
       loadFinancialSummary();
     });
@@ -322,7 +322,7 @@
       try {
         const j = await res.json();
         detail = j.detail || JSON.stringify(j);
-      } catch {}
+      } catch { }
       throw new Error(detail);
     }
     if (res.status === 204) return null;
@@ -372,13 +372,13 @@
 				<div class="product-media">${escapeHtml((p.name || "P").charAt(0))}</div>
 				<div class="product-body">
 					<div class="product-title">${escapeHtml(p.name)}</div>
-					<div class="product-meta">SKU ${escapeHtml(p.sku)} • Custo: R$ ${Number(
-        p.price
-      ).toFixed(2)} • Venda: R$ ${Number(p.sale_price).toFixed(2)}</div>
+					<div class="product-meta">• SKU ${escapeHtml(p.sku)} </div>
+          <div class="product-meta">• Custo: R$ ${Number(p.price).toFixed(2)} </div>
+          <div class="product-meta">• Venda: R$ ${Number(p.sale_price).toFixed(2)}</div>
 					<div class="product-actions">
 						<span class="tag">Qtd: <strong>${p.quantity}</strong></span>
 						<div class="qty-actions">
-							<input type="number" step="1" placeholder="±quantidade" />
+							<input type="number" step="1" placeholder="Quantidade" />
 							<input type="text" placeholder="Motivo (opcional)" />
 							<button class="button" data-act="adjust">Ajustar</button>
 							<button class="button" data-act="txs">Histórico</button>
@@ -436,8 +436,7 @@
             const lines = (txs || [])
               .map(
                 (t) =>
-                  `${new Date(t.created_at).toLocaleString()} • ${t.type} • ${
-                    t.change
+                  `${new Date(t.created_at).toLocaleString()} • ${t.type} • ${t.change
                   } • ${t.reason || ""}`
               )
               .join("\n");
