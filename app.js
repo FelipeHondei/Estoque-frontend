@@ -193,10 +193,29 @@
       const itemEl = document.createElement("div");
       itemEl.className = "sale-item";
       itemEl.innerHTML = `
-				<input type="text" placeholder="Nome do produto" value="${item.product_name}" onchange="updateSaleItem(${item.id}, 'product_name', this.value)" />
-				<input type="number" placeholder="Qtd" value="${item.quantity}" min="1" onchange="updateSaleItem(${item.id}, 'quantity', parseInt(this.value) || 1)" />
-				<input type="number" placeholder="Custo unit." step="0.01" value="${item.unit_cost}" onchange="updateSaleItem(${item.id}, 'unit_cost', parseFloat(this.value) || 0)" />
-				<input type="number" placeholder="Preço unit." step="0.01" value="${item.unit_price}" onchange="updateSaleItem(${item.id}, 'unit_price', parseFloat(this.value) || 0)" />
+				<div class="sale-item-field">
+					<label>Produto</label>
+					<select onchange="updateSaleItem(${item.id}, 'product_selection', this.value)">
+						<option value="">Selecione um produto...</option>
+						${products.map(p => `
+							<option value="${p.id}" ${item.product_id == p.id ? 'selected' : ''}>
+								${escapeHtml(p.name)} - R$ ${Number(p.sale_price).toFixed(2)}
+							</option>
+						`).join('')}
+					</select>
+				</div>
+				<div class="sale-item-field">
+					<label>Qtd</label>
+					<input type="number" placeholder="Qtd" value="${item.quantity}" min="1" onchange="updateSaleItem(${item.id}, 'quantity', parseInt(this.value) || 1)" />
+				</div>
+				<div class="sale-item-field">
+					<label>Custo Unit.</label>
+					<input type="number" placeholder="0.00" step="0.01" value="${item.unit_cost}" onchange="updateSaleItem(${item.id}, 'unit_cost', parseFloat(this.value) || 0)" />
+				</div>
+				<div class="sale-item-field">
+					<label>Preço Unit.</label>
+					<input type="number" placeholder="0.00" step="0.01" value="${item.unit_price}" onchange="updateSaleItem(${item.id}, 'unit_price', parseFloat(this.value) || 0)" />
+				</div>
 				<button type="button" class="remove-item" onclick="removeSaleItem(${item.id})">Remover</button>
 			`;
       saleItemsList.appendChild(itemEl);
@@ -206,7 +225,23 @@
   function updateSaleItem(itemId, field, value) {
     const item = saleItems.find((i) => i.id === itemId);
     if (item) {
-      item[field] = value;
+      if (field === 'product_selection') {
+        const selectedProduct = products.find(p => p.id == value);
+        if (selectedProduct) {
+          item.product_id = selectedProduct.id;
+          item.product_name = selectedProduct.name;
+          item.unit_cost = selectedProduct.price;
+          item.unit_price = selectedProduct.sale_price;
+        } else {
+          item.product_id = null;
+          item.product_name = "";
+          item.unit_cost = 0;
+          item.unit_price = 0;
+        }
+        renderSaleItems(); // Re-renderiza para mostrar os valores atualizados
+      } else {
+        item[field] = value;
+      }
       updateSaleTotal();
     }
   }
