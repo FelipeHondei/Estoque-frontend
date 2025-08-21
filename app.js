@@ -308,37 +308,62 @@
 
   createForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(createForm).entries());
+
+    const formData = new FormData(createForm);
+    const data = Object.fromEntries(formData.entries());
+
+    console.log("Dados do formulário:", data); // Debug
+
+    // Validação básica
+    if (!data.name || !data.sku) {
+      showNotification("Nome e SKU são obrigatórios", "error");
+      return;
+    }
+
     const payload = {
-      name: data.name,
-      sku: data.sku,
-      price: Number(data.price || 0),
-      sale_price: Number(data.sale_price || 0),
-      min_quantity: Number(data.min_quantity || 0),
+      name: data.name.trim(),
+      sku: data.sku.trim(),
+      price: Number(data.price) || 0,
+      sale_price: Number(data.sale_price) || 0,
+      min_quantity: Number(data.min_quantity) || 0,
     };
+
+    console.log("Payload que será enviado:", payload); // Debug
+
     try {
       if (isEditing) {
         const productId = parseInt(editingIdInput.value, 10);
-        await api(`/products/${productId}`, {
+        console.log("Editando produto ID:", productId);
+
+        const response = await api(`/products/${productId}`, {
           method: "PUT",
           body: JSON.stringify(payload),
         });
+
+        console.log("Resposta da edição:", response);
         showNotification("Produto atualizado com sucesso!");
       } else {
         const createPayload = {
           ...payload,
-          initial_quantity: Number(data.initial_quantity || 0),
+          initial_quantity: Number(data.initial_quantity) || 0,
         };
-        await api("/products", {
+
+        console.log("Criando produto com payload:", createPayload);
+
+        const response = await api("/products", {
           method: "POST",
           body: JSON.stringify(createPayload),
         });
+
+        console.log("Resposta da criação:", response);
         showNotification("Produto criado com sucesso!");
       }
+
       createForm.reset();
       closeModal();
       loadProducts();
     } catch (err) {
+      console.error("Erro detalhado:", err);
       showNotification(err.message || "Erro ao salvar produto", "error");
     }
   });
@@ -390,65 +415,97 @@
     }
   });
 
-  async function api(path, init) {
+  async function api(path, init = {}) {
     const url = `${API_BASE}${path}`;
-    console.log(`Fazendo requisição para: ${url}`); // Debug
+    console.log(`Fazendo requisição ${init.method || "GET"} para: ${url}`);
+
+    const config = {
+      method: "GET",
+      ...init,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Origin: window.location.origin,
+        ...(init.headers || {}),
+      },
+    };
+
+    // Para requests POST/PUT, garantir que o body está correto
+    if (config.method === "POST" || config.method === "PUT") {
+      console.log("Body da requisição:", config.body);
+    }
 
     try {
-      const res = await fetch(url, {
-        ...init,
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          ...(init && init.headers ? init.headers : {}),
-        },
-        mode: "cors", // Explicitamente definir CORS
-      });
-
-      console.log(`Status da resposta: ${res.status}`); // Debug
+      const res = await fetch(url, config);
+      console.log(`Resposta: ${res.status} ${res.statusText}`);
 
       if (!res.ok) {
         let detail = `Erro ${res.status}: ${res.statusText}`;
         try {
-          const j = await res.json();
-          detail = j.detail || j.message || JSON.stringify(j);
+          const errorText = await res.text();
+          console.log("Resposta de erro:", errorText);
+
+          // Tentar parsear como JSON
+          try {
+            const errorJson = JSON.parse(errorText);
+            detail = errorJson.detail || errorJson.message || errorText;
+          } catch {
+            detail = errorText || detail;
+          }
         } catch (e) {
-          console.log("Erro ao parsear JSON de erro:", e);
+          console.log("Erro ao ler resposta de erro:", e);
         }
         throw new Error(detail);
       }
 
       if (res.status === 204) return null;
-      return res.json();
-    } catch (error) {
-      console.error("Erro na requisição:", error);
-      if (error.name === "TypeError" && error.message.includes("fetch")) {
-        throw new Error(
-          "Não foi possível conectar com a API. Verifique se ela está rodando."
-        );
+
+      const responseText = await res.text();
+      if (!responseText) return null;
+
+      try {
+        return JSON.parse(responseText);
+      } catch (e) {
+        console.log("Resposta não é JSON válido:", responseText);
+        return responseText;
       }
+    } catch (error) {
+      console.error("Erro completo na requisição:", error);
       throw error;
     }
   }
   async function testApiConnection() {
     const statusEl = document.getElementById("connectionStatus");
-    if (statusEl) statusEl.textContent = "Testando...";
+    if (statusEl) {
+      statusEl.textContent = "Testando...";
+      statusEl.className = "connection-status testing";
+    }
 
     try {
-      await fetch(`${API_BASE}/health`, {
+      // Primeiro tenta um endpoint básico
+      const response = await fetch(`${API_BASE}/products`, {
         method: "GET",
-        mode: "cors",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       });
-      if (statusEl) {
-        statusEl.textContent = "Conectado";
-        statusEl.className = "connection-status connected";
+
+      console.log("Teste de conectividade - Status:", response.status);
+
+      if (response.ok) {
+        if (statusEl) {
+          statusEl.textContent = "Conectado";
+          statusEl.className = "connection-status connected";
+        }
+        return true;
+      } else {
+        throw new Error(`Status: ${response.status}`);
       }
-      return true;
     } catch (error) {
       console.error("Erro de conectividade:", error);
       if (statusEl) {
-        statusEl.textContent = "Desconectado";
+        statusEl.textContent = "Erro de conexão";
         statusEl.className = "connection-status disconnected";
       }
       return false;
