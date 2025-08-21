@@ -356,7 +356,6 @@
         });
 
         console.log("Resposta da criação:", response);
-        showNotification("Produto criado com sucesso!");
       }
 
       createForm.reset();
@@ -364,7 +363,6 @@
       loadProducts();
     } catch (err) {
       console.error("Erro detalhado:", err);
-      showNotification(err.message || "Erro ao salvar produto", "error");
     }
   });
 
@@ -569,26 +567,86 @@
 						  </div>
 					  </div>
             </div>`;
-        productsEl.appendChild(el);
-      }
-    }
-  
-    function escapeHtml(s) {
-      return String(s).replace(
-        /[&<>"]+/g,
-        (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
+      const inputs = el.querySelectorAll("input");
+      const qtyInput = inputs[0];
+      const reasonInput = inputs[1];
+      el.querySelector('[data-act="adjust"]').addEventListener(
+        "click",
+        async () => {
+          const change = parseInt(qtyInput.value, 10);
+          if (Number.isNaN(change) || change === 0) {
+            showNotification("Informe uma quantidade diferente de 0", "error");
+            return;
+          }
+          try {
+            await api(`/products/${p.id}/adjust-stock`, {
+              method: "POST",
+              body: JSON.stringify({
+                change,
+                reason: reasonInput.value || null,
+              }),
+            });
+            loadProducts();
+            showNotification(
+              `Estoque ajustado em ${change > 0 ? "+" : ""}${change} unidades`
+            );
+          } catch (e) {
+            showNotification(e.message, "error");
+          }
+        }
       );
+      el.querySelector('[data-act="del"]').addEventListener(
+        "click",
+        async () => {
+          const confirmed = await showDeleteConfirmation(p.name);
+          if (!confirmed) return;
+          try {
+            await api(`/products/${p.id}`, { method: "DELETE" });
+            loadProducts();
+          } catch (e) {
+            showNotification(e.message, "error");
+          }
+        }
+      );
+      el.querySelector('[data-act="txs"]').addEventListener(
+        "click",
+        async () => {
+          try {
+            const txs = await api(`/products/${p.id}/transactions`);
+            const lines = (txs || [])
+              .map(
+                (t) =>
+                  `${new Date(t.created_at).toLocaleString()} • ${t.type} • ${
+                    t.change
+                  } • ${t.reason || ""}`
+              )
+              .join("\n");
+            alert(lines || "Sem movimentações");
+          } catch (e) {
+            alert(e.message);
+          }
+        }
+      );
+      productsEl.appendChild(el);
     }
-  
-    // Global functions for sale items
-    window.updateSaleItem = updateSaleItem;
-    window.removeSaleItem = removeSaleItem;
-  
-    // Carregar dados iniciais
-    testApiConnection().then((connected) => {
-      if (connected) {
-        loadProducts();
-        loadFinancialSummary();
-      }
-    });
-  })();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(
+      /[&<>"]+/g,
+      (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
+    );
+  }
+
+  // Global functions for sale items
+  window.updateSaleItem = updateSaleItem;
+  window.removeSaleItem = removeSaleItem;
+
+  // Carregar dados iniciais
+  testApiConnection().then((connected) => {
+    if (connected) {
+      loadProducts();
+      loadFinancialSummary();
+    }
+  });
+})();
