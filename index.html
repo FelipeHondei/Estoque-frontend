@@ -3,20 +3,23 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Gestao de vendas e estoque</title>
+    <title>Estoque - Projeto B</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header>
       <div class="branding">
         <span class="logo" aria-hidden="true">🛒</span>
-        <h1>Gestao de vendas e estoque</h1>
+        <h1>Projeto B Store</h1>
       </div>
       <div class="header-actions">
         <div class="api-config">
-          <span id="connectionStatus" class="connection-status testing"
-            >Testando...</span
-          >
+          <label>API:</label>
+          <input
+            id="apiBaseInput"
+            placeholder="URL da API (ex: http://localhost:8000)"
+          />
+          <button id="saveApiBaseBtn" class="button">Salvar</button>
         </div>
         <button id="openCreateModal" class="button primary">
           Novo produto
@@ -65,10 +68,10 @@
     </main>
 
     <footer>
-      <small>Gestao de vendas e estoque</small>
+      <small>Projeto B • Estoque simples</small>
     </footer>
 
-    <!-- Modal: Novo/Editar Produto -->
+    <!-- Modal: Novo Produto -->
     <div id="createModal" class="modal hidden">
       <div class="modal-overlay" id="modalOverlay"></div>
       <div
@@ -81,27 +84,79 @@
           ×
         </button>
         <h3 id="modalTitle">Cadastrar novo produto</h3>
-        <form id="createForm" class="form-grid">
-          <input type="hidden" id="editingId" />
-          <label>Nome</label>
-          <input name="name" required />
-          <label>SKU</label>
-          <input name="sku" required />
-          <label>Preço de Custo</label>
-          <input name="price" type="number" step="0.01" value="0" />
-          <label>Preço de Venda</label>
-          <input name="sale_price" type="number" step="0.01" value="0" />
-          <label>Qtd. Mínima</label>
-          <input name="min_quantity" type="number" value="0" />
-          <label>Estoque Inicial</label>
-          <input name="initial_quantity" type="number" value="0" />
-          <div class="modal-actions">
-            <button type="button" class="button" id="cancelCreate">
-              Cancelar
-            </button>
-            <button type="submit" class="button primary" id="saveButton">
-              Salvar
-            </button>
+        <form id="createForm">
+          <input type="hidden" id="editingId" name="editing_id" />
+          <div class="form-grid">
+            <div>
+              <label for="name">Nome do produto</label>
+              <input name="name" required placeholder="Nome do produto" />
+            </div>
+            <div>
+              <label for="sku">SKU</label>
+              <input name="sku" required placeholder="SKU único" />
+            </div>
+            <div>
+              <label for="price">Preço de custo</label>
+              <input
+                name="price"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div>
+              <label for="sale_price">Preço de venda</label>
+              <input
+                name="sale_price"
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                required
+              />
+            </div>
+            <div>
+              <label for="min_quantity">Quantidade mínima</label>
+              <input
+                name="min_quantity"
+                type="number"
+                placeholder="0"
+                required
+              />
+            </div>
+            <div>
+              <label for="initial_quantity">Estoque inicial</label>
+              <input
+                name="initial_quantity"
+                type="number"
+                placeholder="0"
+                required
+              />
+            </div>
+            <div>
+              <label for="purchase_date">Data de compra</label>
+              <input
+                name="purchase_date"
+                type="date"
+                placeholder="Data de compra"
+              />
+            </div>
+            <div>
+              <label for="expiry_date">Data de vencimento</label>
+              <input
+                name="expiry_date"
+                type="date"
+                placeholder="Data de vencimento"
+              />
+            </div>
+            <div class="modal-actions">
+              <button type="button" class="button" id="cancelCreate">
+                Cancelar
+              </button>
+              <button type="submit" class="button primary" id="saveButton">
+                Salvar
+              </button>
+            </div>
           </div>
         </form>
       </div>
