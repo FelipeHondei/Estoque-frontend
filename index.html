@@ -15,25 +15,27 @@
       <span class="logo" aria-hidden="true">🛒</span>
       <h1>Estoque Hondei</h1>
     </div>
-    <div class="header-actions">
+    </header>
+
+    <div class="header-actions-fixed">
       <button id="openCreateModal" class="button primary">
         Novo produto
       </button>
       <button id="openSaleModal" class="button success">Nova venda</button>
     </div>
-  </header>
+  
 
   <div class="layout">
     <nav class="sidebar">
       <button class="nav-link active" data-section="estoque">Estoque</button>
       <button class="nav-link" data-section="resumo">Resumo de Vendas</button>
     </nav>
+    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Abrir menu" type="button">☰</button>
     <main class="main-content">
       <section id="estoque-section" class="section active">
         <section class="toolbar">
           <h2>Produtos</h2>
           <div class="search-container">
-            <span class="search-icon">🔍</span>
             <input type="text" id="searchInput" class="search-input" placeholder="Pesquisar produtos por nome ou SKU..."
               autocomplete="off" />
             <button class="search-clear" id="searchClear" title="Limpar pesquisa">×</button>
