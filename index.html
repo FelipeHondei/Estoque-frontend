@@ -7,6 +7,7 @@
 	<link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    
     <header>
       <div class="branding">
         <span class="logo" aria-hidden="true">🛒</span>
@@ -19,6 +20,25 @@
         <button id="openSaleModal" class="button success">Nova venda</button>
       </div>
     </header>
+
+    <div class="layout">
+    <nav class="sidebar">
+      <button class="nav-link active" data-section="estoque">Estoque</button>
+      <button class="nav-link" data-section="resumo">Resumo de Vendas</button>
+    </nav>
+    <main class="main-content">
+      <section id="estoque-section" class="section active">
+        <!-- Conteúdo do estoque aqui -->
+        <h2>Estoque</h2>
+        <p>Produtos em estoque...</p>
+      </section>
+      <section id="resumo-section" class="section">
+        <!-- Conteúdo do resumo de vendas aqui -->
+        <h2>Resumo de Vendas</h2>
+        <p>Resumo das vendas...</p>
+      </section>
+    </main>
+  </div>
 
     <main>
       <section class="toolbar">

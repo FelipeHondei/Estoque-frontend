@@ -582,3 +582,18 @@
 	loadProducts();
 	loadFinancialSummary();
 })();
+
+document.querySelectorAll('.nav-link').forEach(btn => {
+  btn.addEventListener('click', function () {
+    // Troca botão ativo
+    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    // Troca seção ativa
+    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+    if (this.dataset.section === 'estoque') {
+      document.getElementById('estoque-section').classList.add('active');
+    } else {
+      document.getElementById('resumo-section').classList.add('active');
+    }
+  });
+});
