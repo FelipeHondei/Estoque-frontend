@@ -2,226 +2,386 @@
 <html lang="pt-br">
 
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Estoque Hondei</title>
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Estoque Hondei - Sistema Avançado</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-  <header>
-  <div class="branding">
-    <span class="logo" aria-hidden="true">🛒</span>
-    <h1>Estoque Hondei</h1>
-  </div>
-  
-  <div class="header-actions">
-    <button id="openCreateModal" class="button primary">
-      <span class="desktop-text">Novo produto</span>
-    </button>
-    <button id="openSaleModal" class="button success">
-      <span class="desktop-text">Nova venda</span>
-    </button>
-  </div>
-</header>
-  
-
-  <div class="layout">
-    <nav class="sidebar closed">
-      <button class="nav-link active" data-section="estoque">
-        <span>📦</span>
-        Estoque
-      </button>
-      <button class="nav-link" data-section="resumo">
-        <span>📊</span>
-        Resumo de Vendas
-      </button>
-    </nav>
-    
-    <button id="sidebarToggle" class="sidebar-toggle" aria-label="Abrir menu" type="button">
-      ≡
-    </button>
-    
-    <main class="main-content">
-      <section id="estoque-section" class="section active">
-        <div class="section-header">
-          <div class="toolbar">
-            <h2>Produtos</h2>
-            <div class="search-container">
-              <input type="text" id="searchInput" class="search-input" 
-                     placeholder="Pesquisar produtos por nome ou SKU..."
-                     autocomplete="off" />
-              <button class="search-clear" id="searchClear" title="Limpar pesquisa">×</button>
-            </div>
-          </div>
-
-          <div class="search-results-info" id="searchResultsInfo" style="display: none;"></div>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-brand">
+            <div class="logo">🛒</div>
+            <span>Estoque Hondei</span>
         </div>
-
-        <section class="products-grid" id="products"></section>
-      </section>
-
-      <section id="resumo-section" class="section">
-        <div class="section-header">
-          <div class="toolbar">
-            <h2>Resumo de Vendas</h2>
-          </div>
-        </div>
-
-        <section class="sales-section">
-          <div class="sales-summary" id="salesSummary">
-            <div class="summary-card">
-              <h3>Resumo Financeiro (30 dias)</h3>
-              <div class="summary-grid">
-                <div class="summary-item">
-                  <span class="label">Total em Vendas</span>
-                  <span class="value success" id="totalSales">R$ 0,00</span>
-                </div>
-                <div class="summary-item">
-                  <span class="label">Total em Custos</span>
-                  <span class="value danger" id="totalCosts">R$ 0,00</span>
-                </div>
-                <div class="summary-item">
-                  <span class="label">Lucro Líquido</span>
-                  <span class="value primary" id="totalProfit">R$ 0,00</span>
-                </div>
-                <div class="summary-item">
-                  <span class="label">Vendas Realizadas</span>
-                  <span class="value" id="totalSalesCount">0</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="sales-list" id="salesList"></div>
-        </section>
-      </section>
-    </main>
-  </div>
-
-  <footer>
-    <small>Estoque Hondei • Controle de estoque e vendas</small>
-  </footer>
-
-  <!-- Modal: Novo Produto -->
-  <div id="createModal" class="modal hidden">
-    <div class="modal-overlay" id="modalOverlay"></div>
-    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <button class="modal-close" id="closeCreateModal" aria-label="Fechar">×</button>
-      <h3 id="modalTitle">Cadastrar novo produto</h3>
-      
-      <form id="createForm">
-        <input type="hidden" id="editingId" name="editing_id" />
-        <div class="form-grid">
-          <div class="form-field">
-            <label for="name">Nome do produto *</label>
-            <input name="name" required placeholder="Ex: Smartphone Samsung Galaxy" />
-          </div>
-          <div class="form-field">
-            <label for="sku">SKU *</label>
-            <input name="sku" required placeholder="Ex: SM-GAL-001" />
-          </div>
-          <div class="form-field">
-            <label for="price">Preço de custo *</label>
-            <input name="price" type="number" step="0.01" placeholder="0,00" required />
-          </div>
-          <div class="form-field">
-            <label for="sale_price">Preço de venda *</label>
-            <input name="sale_price" type="number" step="0.01" placeholder="0,00" required />
-          </div>
-          <div class="form-field">
-            <label for="min_quantity">Quantidade mínima *</label>
-            <input name="min_quantity" type="number" placeholder="0" required />
-          </div>
-          <div class="form-field">
-            <label for="initial_quantity">Estoque inicial *</label>
-            <input name="initial_quantity" type="number" placeholder="0" required />
-          </div>
-          <div class="form-field">
-            <label for="purchase_date">Data de compra</label>
-            <input name="purchase_date" type="date" />
-          </div>
-          <div class="form-field">
-            <label for="expiry_date">Data de vencimento</label>
-            <input name="expiry_date" type="date" />
-          </div>
-        </div>
-        
-        <div class="modal-actions">
-          <button type="button" class="button" id="cancelCreate">Cancelar</button>
-          <button type="submit" class="button primary" id="saveButton">Salvar</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Modal: Nova Venda -->
-  <div id="saleModal" class="modal hidden">
-    <div class="modal-overlay" id="saleModalOverlay"></div>
-    <div class="modal-content large" role="dialog" aria-modal="true" aria-labelledby="saleModalTitle">
-      <button class="modal-close" id="closeSaleModal" aria-label="Fechar">×</button>
-      <h3 id="saleModalTitle">Nova Venda</h3>
-      
-      <form id="saleForm">
-        <div class="sale-header">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Nome do Cliente *</label>
-              <input name="customer_name" required placeholder="Digite o nome do cliente" />
-            </div>
-            <div class="form-group">
-              <label>Forma de Pagamento *</label>
-              <select name="payment_method" required>
-                <option value="">Selecione uma forma de pagamento</option>
-                <option value="dinheiro">💵 Dinheiro</option>
-                <option value="cartão">💳 Cartão</option>
-                <option value="pix">📱 PIX</option>
-                <option value="transferência">🏦 Transferência</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group full-width">
-            <label>Observações</label>
-            <textarea name="notes" placeholder="Observações sobre a venda (opcional)..." rows="3"></textarea>
-          </div>
-        </div>
-
-        <div class="sale-items">
-          <div class="sale-items-header">
-            <h4>Itens da Venda</h4>
-            <button type="button" class="button" id="addSaleItem">
-              ➕ Adicionar Item
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="openModal('product')">
+                ➕ <span class="desktop-text">Novo Produto</span>
             </button>
-          </div>
-          
-          <div id="saleItemsList" class="sale-items-container">
-            <div class="empty-sale-items">
-              <p>📦 Nenhum item adicionado ainda</p>
-              <small>Clique em "Adicionar Item" para começar</small>
-            </div>
-          </div>
+            <button class="btn btn-success" onclick="openModal('sale')">
+                💰 <span class="desktop-text">Nova Venda</span>
+            </button>
         </div>
+    </header>
 
-        <div class="sale-summary">
-          <div class="sale-total">
-            <div class="total-row">
-              <span>Total da Venda:</span>
-              <span id="saleTotal" class="total-value">R$ 0,00</span>
-            </div>
-          </div>
-        </div>
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
-        <div class="modal-actions">
-          <button type="button" class="button" id="cancelSale">Cancelar</button>
-          <button type="submit" class="button success">
-            ✅ Finalizar Venda
-          </button>
-        </div>
-      </form>
+    <!-- Layout -->
+    <div class="layout">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-nav">
+                <button class="nav-item active" onclick="showSection('dashboard')" data-section="dashboard">
+                    <span class="icon">📊</span>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" onclick="showSection('products')" data-section="products">
+                    <span class="icon">📦</span>
+                    <span>Produtos</span>
+                </button>
+                <button class="nav-item" onclick="showSection('sales')" data-section="sales">
+                    <span class="icon">💰</span>
+                    <span>Vendas</span>
+                </button>
+                <button class="nav-item" onclick="showSection('reports')" data-section="reports">
+                    <span class="icon">📈</span>
+                    <span>Relatórios</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard-section" class="section">
+                <div class="content-header">
+                    <h1 class="page-title">Dashboard</h1>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label for="period-select">Período:</label>
+                            <select id="period-select" class="filter-select" onchange="updatePeriod(this.value)">
+                                <option value="7">Últimos 7 dias</option>
+                                <option value="30" selected>Últimos 30 dias</option>
+                                <option value="90">Últimos 90 dias</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            📤 Exportar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon success">💰</div>
+                        <div class="stat-content">
+                            <h3 id="total-sales">R$ 0,00</h3>
+                            <p>Total em Vendas</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon warning">📊</div>
+                        <div class="stat-content">
+                            <h3 id="total-costs">R$ 0,00</h3>
+                            <p>Total em Custos</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon primary">📈</div>
+                        <div class="stat-content">
+                            <h3 id="profit">R$ 0,00</h3>
+                            <p>Lucro Líquido</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon info">🛍️</div>
+                        <div class="stat-content">
+                            <h3 id="sales-count">0</h3>
+                            <p>Vendas Realizadas</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Alertas de Estoque</h2>
+                    </div>
+                    <div class="card-body" id="stock-alerts">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">✅</div>
+                            <h3>Tudo em ordem!</h3>
+                            <p>Nenhum alerta de estoque no momento.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products-section" class="section hidden">
+                <div class="content-header">
+                    <h1 class="page-title">Produtos</h1>
+                    <div class="search-container">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" id="product-search" placeholder="Pesquisar produtos..."
+                            oninput="searchProducts(this.value)">
+                        <button class="search-clear" onclick="clearSearch()">✕</button>
+                    </div>
+                </div>
+
+                <div class="products-grid" id="products-grid">
+                    <!-- Produtos serão carregados aqui -->
+                </div>
+            </section>
+
+            <!-- Sales Section -->
+            <section id="sales-section" class="section hidden">
+                <div class="content-header">
+                    <h1 class="page-title">Vendas</h1>
+                    <button class="btn btn-success" onclick="openModal('sale')">
+                        ➕ Nova Venda
+                    </button>
+                </div>
+                <div class="card">
+                    <div class="card-body" id="sales-list">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">💰</div>
+                            <h3>Nenhuma venda registrada</h3>
+                            <p>Comece registrando sua primeira venda.</p>
+                            <button class="btn btn-primary" onclick="openModal('sale')">Nova Venda</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports-section" class="section hidden">
+                <div class="content-header">
+                    <h1 class="page-title">Relatórios</h1>
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>Tipo:</label>
+                            <select class="filter-select">
+                                <option>Vendas por período</option>
+                                <option>Produtos mais vendidos</option>
+                                <option>Lucro por produto</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">Gerar Relatório</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📊</div>
+                            <h3>Relatórios em desenvolvimento</h3>
+                            <p>Em breve você terá acesso a relatórios detalhados.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
     </div>
-  </div>
 
-  <script src="config.js"></script>
-  <script src="app.js"></script>
+    <!-- Modal para Produto -->
+    <div class="modal" id="product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Novo Produto</h2>
+                <button class="modal-close" onclick="closeModal('product')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="product-form" onsubmit="saveProduct(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Produto *</label>
+                            <input type="text" class="form-input" name="name" required
+                                placeholder="Ex: Óleo Motor 5W30">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SKU *</label>
+                            <input type="text" class="form-input" name="sku" required placeholder="Ex: OL-5W30-001">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preço de Compra *</label>
+                            <input type="number" class="form-input" name="price" required step="0.01"
+                                placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preço de Venda *</label>
+                            <input type="number" class="form-input" name="sale_price" required step="0.01"
+                                placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quantidade Inicial *</label>
+                            <input type="number" class="form-input" name="quantity" required min="0" step="1"
+                                placeholder="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estoque Mínimo *</label>
+                            <input type="number" class="form-input" name="min_quantity" required min="0"
+                                placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Compra</label>
+                            <input type="date" class="form-input" name="purchase_date">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Vencimento</label>
+                            <input type="date" class="form-input" name="expiry_date">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-4 gap-4">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="closeModal('product')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="loading hidden" id="product-loading"></span>
+                            Salvar Produto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Editar Produto -->
+    <div class="modal" id="edit-product-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Produto</h2>
+                <button class="modal-close" onclick="closeModal('edit-product')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="edit-product-form" onsubmit="updateProduct(event)">
+                    <input type="hidden" name="id" />
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Nome do Produto *</label>
+                            <input type="text" class="form-input" name="name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">SKU *</label>
+                            <input type="text" class="form-input" name="sku" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preço de Compra *</label>
+                            <input type="number" class="form-input" name="price" required step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Preço de Venda *</label>
+                            <input type="number" class="form-input" name="sale_price" required step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Quantidade *</label>
+                            <input type="number" class="form-input" name="quantity" required min="0" step="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estoque Mínimo *</label>
+                            <input type="number" class="form-input" name="min_quantity" required min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Compra</label>
+                            <input type="date" class="form-input" name="purchase_date">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Data de Vencimento</label>
+                            <input type="date" class="form-input" name="expiry_date">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center mt-4 gap-4">
+                        <button type="button" class="btn btn-secondary"
+                            onclick="closeModal('edit-product')">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <span class="loading hidden" id="edit-product-loading"></span>
+                            Salvar Alterações
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Venda -->
+    <div class="modal" id="sale-modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Nova Venda</h2>
+                <button class="modal-close" onclick="closeModal('sale')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="sale-form" onsubmit="saveSale(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" class="form-input" name="customer" placeholder="Nome do cliente">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Forma de Pagamento</label>
+                            <select class="form-input" name="payment">
+                                <option value="dinheiro">💵 Dinheiro</option>
+                                <option value="cartao">💳 Cartão</option>
+                                <option value="pix">📱 PIX</option>
+                                <option value="transferencia">🏦 Transferência</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Itens da Venda</label>
+                        <div id="sale-items">
+                            <div class="sale-item"
+                                style="display: flex; gap: 12px; align-items: end; margin-bottom: 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius);">
+                                <div style="flex: 2;">
+                                    <label class="form-label">Produto</label>
+                                    <select class="form-input" name="product" onchange="updateItemPrice(this)">
+                                        <option value="">Selecione um produto</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="form-label">Quantidade</label>
+                                    <input type="number" class="form-input" name="quantity" min="1" value="1"
+                                        onchange="updateTotal()">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="form-label">Preço Unit.</label>
+                                    <input type="number" class="form-input" name="unit_price" step="0.01" readonly>
+                                </div>
+                                <button type="button" class="btn btn-secondary" onclick="removeItem(this)"
+                                    style="height: fit-content;">🗑️</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addSaleItem()">➕ Adicionar
+                            Item</button>
+                    </div>
+
+                    <div class="flex justify-between items-center"
+                        style="padding: 20px; background: var(--border-light); border-radius: var(--radius); margin: 20px 0;">
+                        <span style="font-size: 18px; font-weight: 600;">Total:</span>
+                        <span id="sale-total" style="font-size: 24px; font-weight: 800; color: var(--success);">R$
+                            0,00</span>
+                    </div>
+
+                    <div class="flex justify-between items-center gap-4">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('sale')">Cancelar</button>
+                        <button type="submit" class="btn btn-success">
+                            <span class="loading hidden" id="sale-loading"></span>
+                            💰 Finalizar Venda
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
 </body>
 
 </html>

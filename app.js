@@ -1,635 +1,615 @@
-(function () {
-	const productsEl = document.getElementById("products");
-	const searchInput = document.getElementById("searchInput");
-	const searchClear = document.getElementById("searchClear");
-	const searchResultsInfo = document.getElementById("searchResultsInfo");
-  
-	// Modal elements
-	const openCreateModalBtn = document.getElementById("openCreateModal");
-	const createModal = document.getElementById("createModal");
-	const closeCreateModalBtn = document.getElementById("closeCreateModal");
-	const cancelCreateBtn = document.getElementById("cancelCreate");
-	const modalOverlay = document.getElementById("modalOverlay");
-	const createForm = document.getElementById("createForm");
-	const modalTitle = document.getElementById("modalTitle");
-	const saveButton = document.getElementById("saveButton");
-	const editingIdInput = document.getElementById("editingId");
-  
-	// Sale modal elements
-	const openSaleModalBtn = document.getElementById("openSaleModal");
-	const saleModal = document.getElementById("saleModal");
-	const closeSaleModalBtn = document.getElementById("closeSaleModal");
-	const cancelSaleBtn = document.getElementById("cancelSale");
-	const saleModalOverlay = document.getElementById("saleModalOverlay");
-	const saleForm = document.getElementById("saleForm");
-	const saleItemsList = document.getElementById("saleItemsList");
-	const addSaleItemBtn = document.getElementById("addSaleItem");
-	const saleTotal = document.getElementById("saleTotal");
-  
-	let API_BASE = "https://estoque-xpb2.onrender.com";
-	let isEditing = false;
-	let products = [];
-	let filteredProducts = [];
-	let saleItems = [];
-	let currentSearchTerm = '';
-  
-	// Search functionality
-	function performSearch(searchTerm) {
-		currentSearchTerm = searchTerm.toLowerCase().trim();
-		
-		if (!currentSearchTerm) {
-			filteredProducts = [...products];
-			searchResultsInfo.style.display = 'none';
-			searchClear.classList.remove('visible');
-		} else {
-			filteredProducts = products.filter(product => 
-				product.name.toLowerCase().includes(currentSearchTerm) ||
-				product.sku.toLowerCase().includes(currentSearchTerm)
-			);
-			
-			// Show search results info
-			const resultsCount = filteredProducts.length;
-			const totalCount = products.length;
-			
-			if (resultsCount === 0) {
-				searchResultsInfo.textContent = `Nenhum produto encontrado para "${searchTerm}"`;
-			} else if (resultsCount === totalCount) {
-				searchResultsInfo.style.display = 'none';
-			} else {
-				searchResultsInfo.textContent = `Mostrando ${resultsCount} de ${totalCount} produtos`;
-			}
-			searchResultsInfo.style.display = 'block';
-			searchClear.classList.add('visible');
-		}
-		
-		renderProducts(filteredProducts);
-	}
-	
-	// Search event listeners
-	searchInput.addEventListener('input', (e) => {
-		performSearch(e.target.value);
-	});
-	
-	searchClear.addEventListener('click', () => {
-		searchInput.value = '';
-		performSearch('');
-		searchInput.focus();
-	});
-	
-	// Clear search on escape key
-	searchInput.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape') {
-			searchInput.value = '';
-			performSearch('');
-		}
-	});
+let API_BASE = "https://estoque-xpb2.onrender.com";
+        let products = [];
+        let sales = [];
+        let currentSection = 'dashboard';
 
-	// Notificações
-	function showNotification(message, type = "success") {
-		const notification = document.createElement("div");
-		notification.className = `notification ${type}`;
-		notification.textContent = message;
-		document.body.appendChild(notification);
-		setTimeout(() => {
-			notification.classList.add("removing");
-			setTimeout(() => {
-				document.body.removeChild(notification);
-			}, 300);
-		}, 3000);
-	}
-  
-	// Confirmação de exclusão
-	function showDeleteConfirmation(productName) {
-		return new Promise((resolve) => {
-			const overlay = document.createElement("div");
-			overlay.className = "modal-overlay";
-			overlay.style.position = "fixed";
-			overlay.style.inset = "0";
-			overlay.style.background = "rgba(0,0,0,0.4)";
-			overlay.style.zIndex = "999";
-			overlay.style.backdropFilter = "blur(4px)";
-			const confirmation = document.createElement("div");
-			confirmation.className = "delete-confirmation";
-			confirmation.innerHTML = `
-					<h4>🗑️ Confirmar exclusão</h4>
-					<p>Tem certeza que deseja excluir o produto <strong>"${productName}"</strong>?</p>
-					<p style="font-size: 12px;">Esta ação não pode ser desfeita.</p>
-					<div class="actions">
-						<button class="button" id="cancelDelete">Cancelar</button>
-						<button class="button danger" id="confirmDelete">Excluir</button>
-					</div>`;
-			document.body.appendChild(overlay);
-			document.body.appendChild(confirmation);
-			document.getElementById("cancelDelete").onclick = () => {
-				document.body.removeChild(overlay);
-				document.body.removeChild(confirmation);
-				resolve(false);
-			};
-			document.getElementById("confirmDelete").onclick = () => {
-				document.body.removeChild(overlay);
-				document.body.removeChild(confirmation);
-				resolve(true);
-			};
-			overlay.onclick = () => {
-				document.body.removeChild(overlay);
-				document.body.removeChild(confirmation);
-				resolve(false);
-			};
-		});
-	}
-  
-	function openModal() {
-		createModal.classList.remove("hidden");
-		isEditing = false;
-		if (modalTitle) modalTitle.textContent = "Cadastrar novo produto";
-		if (saveButton) saveButton.textContent = "Salvar";
-		if (editingIdInput) editingIdInput.value = "";
-		createForm.reset();
-		setTimeout(() => {
-			const first = createModal.querySelector('input[name="name"]');
-			if (first) first.focus();
-		}, 100);
-	}
-  
-	function openEditModal(product) {
-		createModal.classList.remove("hidden");
-		isEditing = true;
-		if (modalTitle) modalTitle.textContent = "Editar produto";
-		if (saveButton) saveButton.textContent = "Atualizar";
-		if (editingIdInput) editingIdInput.value = product.id;
-		
-		// Preenche os campos com os dados do produto
-		createForm.querySelector('input[name="name"]').value = product.name;
-		createForm.querySelector('input[name="sku"]').value = product.sku;
-		createForm.querySelector('input[name="price"]').value = product.price;
-		createForm.querySelector('input[name="sale_price"]').value = product.sale_price;
-		createForm.querySelector('input[name="min_quantity"]').value = product.min_quantity;
-		
-		// Preenche as datas se existirem
-		if (product.purchase_date) {
-			createForm.querySelector('input[name="purchase_date"]').value = product.purchase_date;
-		}
-		if (product.expiry_date) {
-			createForm.querySelector('input[name="expiry_date"]').value = product.expiry_date;
-		}
-		
-		// Para edição, mostramos a quantidade atual no campo de estoque inicial apenas para referência visual
-		const initQty = createForm.querySelector('input[name="initial_quantity"]');
-		if (initQty) initQty.value = product.quantity;
-		
-		setTimeout(() => {
-			const first = createModal.querySelector('input[name="name"]');
-			if (first) first.focus();
-		}, 100);
-	}
-  
-	function closeModal() {
-		createModal.classList.add("hidden");
-	}
-  
-	// Sale modal functions
-	function openSaleModal() {
-		saleModal.classList.remove("hidden");
-		saleItems = [];
-		renderSaleItems();
-		updateSaleTotal();
-	}
-  
-	function closeSaleModal() {
-		saleModal.classList.add("hidden");
-		saleItems = [];
-		saleForm.reset();
-	}
-  
-	function addSaleItem() {
-		const item = {
-			id: Date.now(),
-			product_id: null,
-			product_name: "",
-			quantity: 1,
-			unit_cost: 0,
-			unit_price: 0,
-		};
-		saleItems.push(item);
-		renderSaleItems();
-	}
-  
-	function removeSaleItem(itemId) {
-		saleItems = saleItems.filter((item) => item.id !== itemId);
-		renderSaleItems();
-		updateSaleTotal();
-	}
-  
-	function renderSaleItems() {
-		saleItemsList.innerHTML = "";
-  
-		if (saleItems.length === 0) {
-			saleItemsList.innerHTML =
-				'<p style="text-align: center; color: var(--muted); padding: 20px;">Nenhum item adicionado</p>';
-			return;
-		}
-  
-		saleItems.forEach((item, index) => {
-			const itemEl = document.createElement("div");
-			itemEl.className = "sale-item";
-			itemEl.innerHTML = `
-					<div class="sale-item-field">
-						<label>Produto</label>
-						<select onchange="updateSaleItem(${item.id}, 'product_selection', this.value)">
-							<option value="">Selecione um produto...</option>
-							${products.map(p => `
-								<option value="${p.id}" ${item.product_id == p.id ? 'selected' : ''}>
-									${escapeHtml(p.name)} - R$ ${Number(p.sale_price).toFixed(2)}
-								</option>
-							`).join('')}
-						</select>
-					</div>
-					<div class="sale-item-field">
-						<label>Qtd</label>
-						<input type="number" placeholder="Qtd" value="${item.quantity}" min="1" onchange="updateSaleItem(${item.id}, 'quantity', parseInt(this.value) || 1)" />
-					</div>
-					<div class="sale-item-field">
-						<label>Custo Unit.</label>
-						<input type="number" placeholder="0.00" step="0.01" value="${item.unit_cost}" onchange="updateSaleItem(${item.id}, 'unit_cost', parseFloat(this.value) || 0)" />
-					</div>
-					<div class="sale-item-field">
-						<label>Preço Unit.</label>
-						<input type="number" placeholder="0.00" step="0.01" value="${item.unit_price}" onchange="updateSaleItem(${item.id}, 'unit_price', parseFloat(this.value) || 0)" />
-					</div>
-					<button type="button" class="remove-item" onclick="removeSaleItem(${item.id})">Remover</button>
-				`;
-			saleItemsList.appendChild(itemEl);
-		});
-	}
-  
-	function updateSaleItem(itemId, field, value) {
-		const item = saleItems.find((i) => i.id === itemId);
-		if (item) {
-			if (field === 'product_selection') {
-				const selectedProduct = products.find(p => p.id == value);
-				if (selectedProduct) {
-					item.product_id = selectedProduct.id;
-					item.product_name = selectedProduct.name;
-					item.unit_cost = selectedProduct.price;
-					item.unit_price = selectedProduct.sale_price;
-				} else {
-					item.product_id = null;
-					item.product_name = "";
-					item.unit_cost = 0;
-					item.unit_price = 0;
-				}
-				renderSaleItems();
-			} else {
-				item[field] = value;
-			}
-			updateSaleTotal();
-		}
-	}
-  
-	function updateSaleTotal() {
-		const total = saleItems.reduce(
-			(sum, item) => sum + item.quantity * item.unit_price,
-			0
-		);
-		saleTotal.textContent = `R$ ${total.toFixed(2)}`;
-	}
-  
-	// Event listeners
-	openCreateModalBtn.addEventListener("click", openModal);
-	closeCreateModalBtn.addEventListener("click", closeModal);
-	cancelCreateBtn.addEventListener("click", closeModal);
-	modalOverlay.addEventListener("click", closeModal);
-  
-	openSaleModalBtn.addEventListener("click", openSaleModal);
-	closeSaleModalBtn.addEventListener("click", closeSaleModal);
-	cancelSaleBtn.addEventListener("click", closeSaleModal);
-	if (saleModalOverlay)
-		saleModalOverlay.addEventListener("click", closeSaleModal);
-  
-	addSaleItemBtn.addEventListener("click", addSaleItem);
-  
-	window.addEventListener("keydown", (e) => {
-		if (e.key === "Escape") {
-			closeModal();
-			closeSaleModal();
-		}
-	});
-  
-	createForm.addEventListener("submit", async (e) => {
-		e.preventDefault();
-		const data = Object.fromEntries(new FormData(createForm).entries());
-		const payload = {
-			name: data.name,
-			sku: data.sku,
-			price: Number(data.price || 0),
-			sale_price: Number(data.sale_price || 0),
-			min_quantity: Number(data.min_quantity || 0),
-			purchase_date: data.purchase_date || null,
-			expiry_date: data.expiry_date || null,
-		};
-		
-		try {
-			if (isEditing) {
-				const productId = parseInt(editingIdInput.value, 10);
-				await api(`/products/${productId}`, {
-					method: "PUT",
-					body: JSON.stringify(payload),
-				});
-				showNotification("Produto atualizado com sucesso!");
-			} else {
-				const createPayload = {
-					...payload,
-					initial_quantity: Number(data.initial_quantity || 0),
-				};
-				await api("/products", {
-					method: "POST",
-					body: JSON.stringify(createPayload),
-				});
-				showNotification("Produto criado com sucesso!");
-			}
-			createForm.reset();
-			closeModal();
-			loadProducts();
-		} catch (err) {
-			showNotification(err.message || "Erro ao salvar produto", "error");
-		}
-	});
-  
-	saleForm.addEventListener("submit", async (e) => {
-		e.preventDefault();
-		if (saleItems.length === 0) {
-			showNotification("Adicione pelo menos um item à venda", "error");
-			return;
-		}
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function () {
+            loadDashboardData();
+            loadProducts();
+            updateProductSelect();
+        });
 
-		// Basic validation: product selected and quantity > 0
-		for (const [index, item] of saleItems.entries()) {
-			if (!item.product_id) {
-				showNotification(`Selecione um produto no item ${index + 1}`, "error");
-				return;
-			}
-			if (!item.quantity || item.quantity <= 0) {
-				showNotification(`Informe uma quantidade válida no item ${index + 1}`, "error");
-				return;
-			}
-		}
-  
-		const formData = new FormData(saleForm);
-		const saleData = {
-			customer_name: formData.get("customer_name"),
-			payment_method: formData.get("payment_method"),
-			notes: formData.get("notes"),
-			items: saleItems.map((item) => ({
-				product_id: item.product_id,
-				product_name: item.product_name,
-				quantity: item.quantity,
-				unit_cost: item.unit_cost,
-				unit_price: item.unit_price,
-			})),
-		};
-  
-		try {
-			await api("/sales", { method: "POST", body: JSON.stringify(saleData) });
-			showNotification("Venda realizada com sucesso!");
-			closeSaleModal();
-			loadProducts();
-			loadFinancialSummary();
-		} catch (err) {
-			showNotification(err.message || "Erro ao finalizar venda", "error");
-		}
-	});
-  
-	async function api(path, init) {
-		const res = await fetch(`${API_BASE}${path}`, {
-			...init,
-			headers: {
-				"Content-Type": "application/json",
-				...(init && init.headers ? init.headers : {}),
-			},
-		});
-		if (!res.ok) {
-			let detail = "Erro de requisição";
-			try {
-				const j = await res.json();
-				detail = j.detail || JSON.stringify(j);
-			} catch { }
-			throw new Error(detail);
-		}
-		if (res.status === 204) return null;
-		return res.json();
-	}
-  
-	async function loadProducts() {
-		productsEl.innerHTML = '<div style="opacity:.7">Carregando...</div>';
-		try {
-			products = await api("/products");
-			filteredProducts = [...products];
-			
-			// Reaplica a pesquisa se houver termo ativo
-			if (currentSearchTerm) {
-				performSearch(searchInput.value);
-			} else {
-				renderProducts(products);
-			}
-		} catch (e) {
-			productsEl.innerHTML = `<div style="opacity:.7">${e.message}</div>`;
-		}
-	}
-  
-	async function loadFinancialSummary() {
-		try {
-			const summary = await api("/financial/summary?days=30");
-			document.getElementById("totalSales").textContent = `R$ ${summary.total_sales.toFixed(2)}`;
-			document.getElementById("totalCosts").textContent = `R$ ${summary.total_costs.toFixed(2)}`;
-			document.getElementById("totalProfit").textContent = `R$ ${summary.total_profit.toFixed(2)}`;
-			document.getElementById("totalSalesCount").textContent = summary.total_sales_count;
-		} catch (e) {
-			console.error("Erro ao carregar resumo financeiro:", e);
-		}
-	}
-  
-	function renderProducts(list) {
-		if (!list || !list.length) {
-			if (currentSearchTerm) {
-				productsEl.innerHTML = '<div style="opacity:.7; text-align: center; padding: 40px;">Nenhum produto encontrado com o termo pesquisado</div>';
-			} else {
-				productsEl.innerHTML = '<div style="opacity:.7">Nenhum produto cadastrado</div>';
-			}
-			return;
-		}
-		productsEl.innerHTML = "";
-		for (const p of list) {
-			const el = document.createElement("article");
-			el.className = "product-card";
-			
-			// Formata as datas para exibição
-			const purchaseDate = p.purchase_date ? new Date(p.purchase_date).toLocaleDateString('pt-BR') : 'Não informada';
-			const expiryDate = p.expiry_date ? new Date(p.expiry_date).toLocaleDateString('pt-BR') : 'Não informada';
-			
-			el.innerHTML = `
-					<div class="product-media">${escapeHtml((p.name || "P").charAt(0))}</div>
-					<div class="product-body">
-						<div class="product-title">${escapeHtml(p.name)}</div>
-						<div class="product-meta">• SKU ${escapeHtml(p.sku)} </div>
-						<div class="product-meta">• Custo: R$ ${Number(p.price).toFixed(2)} </div>
-						<div class="product-meta">• Venda: R$ ${Number(p.sale_price).toFixed(2)}</div>
-						<div class="product-meta">• Compra: ${purchaseDate}</div>
-						<div class="product-meta">• Vencimento: ${expiryDate}</div>
-						<div class="product-actions">
-							<span class="tag">Qtd: <strong>${p.quantity}</strong></span>
-							<div class="qty-actions">
-								<input type="number" step="1" placeholder="Quantidade" />
-								<input type="text" placeholder="Motivo (opcional)" />
-								<button class="button" data-act="adjust">Ajustar</button>
-								<button class="button" data-act="edit">Editar</button>
-								<button class="button" data-act="txs">Histórico</button>
-								<button class="button danger" data-act="del">Excluir</button>
-							</div>
-						</div>
-					</div>`;
-			
-			const inputs = el.querySelectorAll("input");
-			const qtyInput = inputs[0];
-			const reasonInput = inputs[1];
-			
-			// Botão de ajustar estoque
-			el.querySelector('[data-act="adjust"]').addEventListener(
-				"click",
-				async () => {
-					const change = parseInt(qtyInput.value, 10);
-					if (Number.isNaN(change) || change === 0) {
-						showNotification("Informe uma quantidade diferente de 0", "error");
-						return;
-					}
-					try {
-						await api(`/products/${p.id}/adjust-stock`, {
-							method: "POST",
-							body: JSON.stringify({
-								change,
-								reason: reasonInput.value || null,
-							}),
-						});
-						loadProducts();
-						showNotification(
-							`Estoque ajustado em ${change > 0 ? "+" : ""}${change} unidades`
-						);
-					} catch (e) {
-						showNotification(e.message, "error");
-					}
-				}
-			);
-			
-			// Botão de editar produto
-			el.querySelector('[data-act="edit"]').addEventListener(
-				"click",
-				() => {
-					openEditModal(p);
-				}
-			);
-			
-			// Botão de excluir
-			el.querySelector('[data-act="del"]').addEventListener(
-				"click",
-				async () => {
-					const confirmed = await showDeleteConfirmation(p.name);
-					if (!confirmed) return;
-					try {
-						await api(`/products/${p.id}`, { method: "DELETE" });
-						loadProducts();
-						showNotification("Produto excluído com sucesso!");
-					} catch (e) {
-						showNotification(e.message, "error");
-					}
-				}
-			);
-			
-			// Botão de histórico
-			el.querySelector('[data-act="txs"]').addEventListener(
-				"click",
-				async () => {
-					try {
-						const txs = await api(`/products/${p.id}/transactions`);
-						const lines = (txs || [])
-							.map(
-								(t) =>
-									`${new Date(t.created_at).toLocaleString()} • ${t.type} • ${t.change
-									} • ${t.reason || ""}`
-							)
-							.join("\n");
-						alert(lines || "Sem movimentações");
-					} catch (e) {
-						alert(e.message);
-					}
-				}
-			);
-			
-			productsEl.appendChild(el);
-		}
-	}
-  
-	function escapeHtml(s) {
-		return String(s).replace(
-			/[&<>"]+/g,
-			(c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])
-		);
-	}
-  
-	// Global functions for sale items
-	window.updateSaleItem = updateSaleItem;
-	window.removeSaleItem = removeSaleItem;
-  
-	// Carregar dados iniciais
-	loadProducts();
-	loadFinancialSummary();
-})();
+        async function api(path, init) {
+            const res = await fetch(`${API_BASE}${path}`, {
+                ...init,
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(init && init.headers ? init.headers : {}),
+                },
+            });
+            if (!res.ok) {
+                let detail = "Erro de requisição";
+                try {
+                    const j = await res.json();
+                    detail = j.detail || JSON.stringify(j);
+                } catch { }
+                throw new Error(detail);
+            }
+            if (res.status === 204) return null;
+            return res.json();
+        }
 
-document.querySelectorAll('.nav-link').forEach(btn => {
-  btn.addEventListener('click', function () {
-    // Troca botão ativo
-    document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    // Troca seção ativa
-    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-    if (this.dataset.section === 'estoque') {
-      document.getElementById('estoque-section').classList.add('active');
-    } else {
-      document.getElementById('resumo-section').classList.add('active');
-    }
-  });
-});
-const sidebar = document.querySelector('.sidebar');
-const sidebarToggle = document.getElementById('sidebarToggle');
-const layout = document.querySelector('.layout');
+        // Navegação
+        function showSection(section) {
+            // Atualizar nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.dataset.section === section) {
+                    item.classList.add('active');
+                }
+            });
 
-// Inicialmente fechado em telas pequenas
-if (window.innerWidth <= 1000) sidebar.classList.add('closed');
+            // Mostrar seção
+            document.querySelectorAll('.section').forEach(sec => {
+                sec.classList.add('hidden');
+            });
+            document.getElementById(section + '-section').classList.remove('hidden');
 
-// Alterna o menu lateral
-sidebarToggle.addEventListener('click', (e) => {
-  e.stopPropagation();
-  sidebar.classList.toggle('closed');
-  layout.classList.toggle('menu-open', !sidebar.classList.contains('closed'));
-});
+            currentSection = section;
 
-// Fecha ao clicar fora do menu
-document.addEventListener('click', function (e) {
-  if (
-    sidebar &&
-    !sidebar.contains(e.target) &&
-    !sidebarToggle.contains(e.target) &&
-    window.innerWidth <= 1000
-  ) {
-    sidebar.classList.add('closed');
-    layout.classList.remove('menu-open');
-  }
-});
+            // Carregar dados da seção se necessário
+            if (section === 'products') {
+                loadProducts();
+            } else if (section === 'dashboard') {
+                loadDashboardData();
+            }
+        }
 
-// Fecha ao trocar de opção (opcional)
-sidebar.querySelectorAll('.nav-link').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (window.innerWidth <= 1000) {
-      sidebar.classList.add('closed');
-      layout.classList.remove('menu-open');
-    }
-  });
-});
+        // Sidebar toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        // Dashboard
+        function loadDashboardData() {
+            const totalSales = sales.reduce((sum, sale) => sum + sale.total, 0);
+            const totalCosts = sales.reduce((sum, sale) => sum + sale.cost, 0);
+            const profit = totalSales - totalCosts;
+
+            document.getElementById('total-sales').textContent = formatCurrency(totalSales);
+            document.getElementById('total-costs').textContent = formatCurrency(totalCosts);
+            document.getElementById('profit').textContent = formatCurrency(profit);
+            document.getElementById('sales-count').textContent = sales.length;
+
+            loadStockAlerts();
+        }
+
+        function loadStockAlerts() {
+            const lowStockProducts = products.filter(p => p.quantity <= p.min_quantity);
+            const alertsContainer = document.getElementById('stock-alerts');
+
+            if (lowStockProducts.length === 0) {
+                alertsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">✅</div>
+                        <h3>Tudo em ordem!</h3>
+                        <p>Nenhum alerta de estoque no momento.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            alertsContainer.innerHTML = lowStockProducts.map(product => `
+                <div class="flex items-center justify-between" style="padding: 12px; border: 1px solid var(--warning); background: #fefce8; border-radius: var(--radius); margin-bottom: 8px;">
+                    <div>
+                        <strong>${product.name}</strong>
+                        <br><small>Estoque atual: ${product.quantity} | Mínimo: ${product.min_quantity}</small>
+                    </div>
+                    <span style="background: var(--warning); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                        ${product.quantity === 0 ? 'SEM ESTOQUE' : 'ESTOQUE BAIXO'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Produtos
+        async function loadProducts() {
+            try {
+                products = await api('/products');
+            } catch (err) {
+                showNotification('Erro ao carregar produtos: ' + err.message, 'error');
+                products = [];
+            }
+            const grid = document.getElementById('products-grid');
+            if (products.length === 0) {
+                grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">📦</div>
+                <h3>Nenhum produto cadastrado</h3>
+                <p>Comece adicionando seu primeiro produto ao estoque.</p>
+                <button class="btn btn-primary" onclick="openModal('product')">Adicionar Produto</button>
+            </div>
+        `;
+                return;
+            }
+
+            grid.innerHTML = products.map(product => {
+                const stockLevel = product.quantity <= 0 ? 'critical' :
+                    product.quantity <= product.min_quantity ? 'low' : 'high';
+
+                const stockText = product.quantity <= 0 ? 'SEM ESTOQUE' :
+                    product.quantity <= product.min_quantity ? 'ESTOQUE BAIXO' :
+                        `${product.quantity} UNIDADES`;
+
+                return `
+                <div class="product-card">
+                    <div class="product-header">
+                        <div class="product-avatar">${product.name.charAt(0)}</div>
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-sku">SKU: ${product.sku}</div>
+                    </div>
+                    <div class="product-body">
+                        <div class="stock-badge ${stockLevel}">${stockText}</div>
+                        <div class="product-info">
+                            <div class="info-item">
+                                <div class="info-label">Compra</div>
+                                <div class="info-value">${Number(product.price).toFixed(2)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Venda</div>
+                                <div class="info-value">${Number(product.sale_price).toFixed(2)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Compra</div>
+                                <div class="info-value">${product.purchase_date ? new Date(product.purchase_date).toLocaleDateString('pt-BR') : 'Não informada'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Vencimento</div>
+                                <div class="info-value">${product.expiry_date ? new Date(product.expiry_date).toLocaleDateString('pt-BR') : 'Não informada'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Margem</div>
+                                <div class="info-value">${((product.sale_price - product.price) / product.price * 100).toFixed(1)}%</div>
+                            </div>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn btn-primary" onclick="adjustStock(${product.id})">📊 Ajustar</button>
+                            <button class="btn btn-secondary" onclick="editProduct(${product.id})">✏️ Editar</button>
+                            <button class="btn btn-secondary" onclick="deleteProduct(${product.id})" style="background: var(--danger); color: white;">🗑️ Excluir</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function searchProducts(term) {
+            const searchClear = document.querySelector('.search-clear');
+            if (term) {
+                searchClear.classList.add('visible');
+                const filtered = products.filter(p =>
+                    p.name.toLowerCase().includes(term.toLowerCase()) ||
+                    p.sku.toLowerCase().includes(term.toLowerCase())
+                );
+                renderProductsGrid(filtered); // Chama a função para renderizar o grid filtrado
+            } else {
+                searchClear.classList.remove('visible');
+                loadProducts(); // Recarrega todos os produtos
+            }
+        }
+
+        // Nova função para renderizar o grid de produtos filtrados
+        function renderProductsGrid(list) {
+            const grid = document.getElementById('products-grid');
+            if (list.length === 0) {
+                grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon">📦</div>
+                <h3>Nenhum produto encontrado</h3>
+                <p>Tente outro termo de pesquisa.</p>
+            </div>
+        `;
+                return;
+            }
+            grid.innerHTML = list.map(product => {
+                const stockLevel = product.quantity <= 0 ? 'critical' :
+                    product.quantity <= product.min_quantity ? 'low' : 'high';
+
+                const stockText = product.quantity <= 0 ? 'SEM ESTOQUE' :
+                    product.quantity <= product.min_quantity ? 'ESTOQUE BAIXO' :
+                        `${product.quantity} UNIDADES`;
+
+                return `
+            <div class="product-card">
+                <div class="product-header">
+                    <div class="product-avatar">${product.name.charAt(0)}</div>
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-sku">SKU: ${product.sku}</div>
+                </div>
+                <div class="product-body">
+                    <div class="stock-badge ${stockLevel}">${stockText}</div>
+                    <div class="product-info">
+                        <div class="info-item">
+                            <div class="info-label">Compra</div>
+                            <div class="info-value">${Number(product.price).toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Venda</div>
+                            <div class="info-value">${Number(product.sale_price).toFixed(2)}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Compra</div>
+                            <div class="info-value">${product.purchase_date ? new Date(product.purchase_date).toLocaleDateString('pt-BR') : 'Não informada'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Vencimento</div>
+                            <div class="info-value">${product.expiry_date ? new Date(product.expiry_date).toLocaleDateString('pt-BR') : 'Não informada'}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Margem</div>
+                            <div class="info-value">${((product.sale_price - product.price) / product.price * 100).toFixed(1)}%</div>
+                        </div>
+                    </div>
+                    <div class="product-actions">
+                        <button class="btn btn-primary" onclick="adjustStock(${product.id})">📊 Ajustar</button>
+                        <button class="btn btn-secondary" onclick="editProduct(${product.id})">✏️ Editar</button>
+                        <button class="btn btn-secondary" onclick="deleteProduct(${product.id})" style="background: var(--danger); color: white;">🗑️ Excluir</button>
+                    </div>
+                </div>
+            </div>
+        `;
+            }).join('');
+        }
+
+        function clearSearch() {
+            document.getElementById('product-search').value = '';
+            document.querySelector('.search-clear').classList.remove('visible');
+            loadProducts();
+        }
+
+        // Modais
+        function openModal(type) {
+            document.getElementById(type + '-modal').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(type) {
+            document.getElementById(type + '-modal').classList.remove('show');
+            document.body.style.overflow = '';
+
+            // Limpar formulários de forma mais específica
+            const form = document.getElementById(type + '-form');
+            if (form) {
+                form.reset();
+                // Para o modal de edição, também limpar campos hidden
+                if (type === 'edit-product') {
+                    const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
+                    hiddenInputs.forEach(input => input.value = '');
+                }
+            }
+        }
+
+        async function updateProduct(event) {
+            event.preventDefault();
+            const loading = document.getElementById('edit-product-loading');
+            loading.classList.remove('hidden');
+
+            const formData = new FormData(event.target);
+            const id = formData.get('id');
+            const product = {
+                name: formData.get('name'),
+                sku: formData.get('sku'),
+                price: parseFloat(formData.get('price')),
+                sale_price: parseFloat(formData.get('sale_price')),
+                quantity: parseInt(formData.get('quantity')) || 0, // Garantir que seja um número
+                min_quantity: parseInt(formData.get('min_quantity')) || 0, // Garantir que seja um número
+                purchase_date: formData.get('purchase_date') || null,
+                expiry_date: formData.get('expiry_date') || null
+            };
+
+            try {
+                await api(`/products/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify(product)
+                });
+                showNotification('Produto atualizado com sucesso!', 'success');
+                closeModal('edit-product');
+                loadProducts();
+                updateProductSelect();
+                if (currentSection === 'dashboard') {
+                    loadDashboardData();
+                }
+            } catch (err) {
+                showNotification('Erro ao atualizar produto: ' + err.message, 'error');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        async function saveProduct(event) {
+            event.preventDefault();
+            const loading = document.getElementById('product-loading');
+            loading.classList.remove('hidden');
+
+            const formData = new FormData(event.target);
+            const product = {
+                name: formData.get('name'),
+                sku: formData.get('sku'),
+                price: parseFloat(formData.get('price')),
+                sale_price: parseFloat(formData.get('sale_price')),
+                quantity: parseInt(formData.get('quantity')) || 0, // Garantir que seja um número
+                min_quantity: parseInt(formData.get('min_quantity')) || 0, // Garantir que seja um número
+                purchase_date: formData.get('purchase_date') || null,
+                expiry_date: formData.get('expiry_date') || null
+            };
+
+            try {
+                await api('/products', {
+                    method: 'POST',
+                    body: JSON.stringify(product)
+                });
+                showNotification('Produto adicionado com sucesso!', 'success');
+                closeModal('product');
+                loadProducts();
+                updateProductSelect();
+                loading.classList.add('hidden');
+                if (currentSection === 'dashboard') {
+                    loadDashboardData();
+                }
+            } catch (err) {
+                showNotification('Erro ao salvar produto: ' + err.message, 'error');
+                loading.classList.add('hidden');
+            }
+        }
+
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            const form = document.getElementById('edit-product-form');
+            form.id.value = product.id;
+            form.name.value = product.name;
+            form.sku.value = product.sku;
+            form.price.value = product.price;
+            form.sale_price.value = product.sale_price;
+            form.quantity.value = product.quantity;
+            form.min_quantity.value = product.min_quantity;
+            form.purchase_date.value = product.purchase_date ? product.purchase_date.split('T')[0] : '';
+            form.expiry_date.value = product.expiry_date ? product.expiry_date.split('T')[0] : '';
+
+            openModal('edit-product');
+        }
+
+        async function deleteProduct(id) {
+            if (confirm('Tem certeza que deseja excluir este produto?')) {
+                try {
+                    await api(`/products/${id}`, { method: 'DELETE' });
+                    showNotification('Produto excluído com sucesso!', 'success');
+                    loadProducts();
+                    updateProductSelect();
+                    if (currentSection === 'dashboard') {
+                        loadDashboardData();
+                    }
+                } catch (err) {
+                    showNotification('Erro ao excluir produto: ' + err.message, 'error');
+                }
+            }
+        }
+
+        function adjustStock(id) {
+            const adjustment = prompt('Ajustar estoque (use + ou - para aumentar/diminuir):');
+            if (!adjustment) return;
+
+            const change = parseInt(adjustment);
+            if (isNaN(change)) {
+                showNotification('Valor inválido!', 'error');
+                return;
+            }
+
+            const product = products.find(p => p.id === id);
+            if (product) {
+                product.quantity += change;
+                if (product.quantity < 0) product.quantity = 0;
+
+                loadProducts();
+                showNotification(`Estoque ajustado em ${change > 0 ? '+' : ''}${change} unidades`, 'success');
+
+                if (currentSection === 'dashboard') {
+                    loadDashboardData();
+                }
+            }
+        }
+
+        // Vendas
+        function updateProductSelect() {
+            const selects = document.querySelectorAll('select[name="product"]');
+            const options = products.map(p => `
+            <option value="${p.id}" data-price="${p.sale_price}">
+                ${p.name} - ${formatCurrency(p.sale_price)}
+            </option>
+        `).join('');
+
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">Selecione um produto</option>' + options;
+            });
+        }
+
+        function addSaleItem() {
+            const container = document.getElementById('sale-items');
+            const itemDiv = container.querySelector('.sale-item').cloneNode(true);
+
+            // Limpar valores
+            itemDiv.querySelectorAll('input, select').forEach(input => {
+                if (input.name === 'quantity') {
+                    input.value = '1';
+                } else {
+                    input.value = '';
+                }
+            });
+
+            container.appendChild(itemDiv);
+            updateProductSelect();
+        }
+
+        function removeItem(button) {
+            const items = document.querySelectorAll('.sale-item');
+            if (items.length > 1) {
+                button.parentElement.remove();
+                updateTotal();
+            }
+        }
+
+        function updateItemPrice(select) {
+            const option = select.selectedOptions[0];
+            const price = option.dataset.price || '0';
+            const priceInput = select.parentElement.parentElement.querySelector('input[name="unit_price"]');
+            priceInput.value = price;
+            updateTotal();
+        }
+
+        function updateTotal() {
+            const items = document.querySelectorAll('.sale-item');
+            let total = 0;
+
+            items.forEach(item => {
+                const quantity = parseFloat(item.querySelector('input[name="quantity"]').value) || 0;
+                const price = parseFloat(item.querySelector('input[name="unit_price"]').value) || 0;
+                total += quantity * price;
+            });
+
+            document.getElementById('sale-total').textContent = formatCurrency(total);
+        }
+
+        async function saveSale(event) {
+            event.preventDefault();
+            const loading = document.getElementById('sale-loading');
+            loading.classList.remove('hidden');
+
+            const formData = new FormData(event.target);
+
+            // Coletar itens da venda
+            const items = [];
+            const saleItems = document.querySelectorAll('.sale-item');
+
+            try {
+                await api('/sales', {
+                    method: 'POST',
+                    body: JSON.stringify(sale)
+                });
+                showNotification('Venda realizada com sucesso!', 'success');
+                closeModal('sale');
+                loadProducts();
+                loadSales();
+                loadDashboardData();
+                loading.classList.add('hidden');
+            } catch (err) {
+                showNotification('Erro ao salvar venda: ' + err.message, 'error');
+                loading.classList.add('hidden');
+            }
+
+            saleItems.forEach(item => {
+                const productId = item.querySelector('select[name="product"]').value;
+                const quantity = parseInt(item.querySelector('input[name="quantity"]').value);
+                const unitPrice = parseFloat(item.querySelector('input[name="unit_price"]').value);
+
+                if (productId && quantity > 0 && unitPrice > 0) {
+                    const product = products.find(p => p.id == productId);
+                    items.push({
+                        product_id: productId,
+                        product_name: product.name,
+                        quantity,
+                        unit_price: unitPrice,
+                        total: quantity * unitPrice
+                    });
+                }
+            });
+
+            if (items.length === 0) {
+                showNotification('Adicione pelo menos um item válido!', 'error');
+                loading.classList.add('hidden');
+                return;
+            }
+
+            const sale = {
+                id: Date.now(),
+                customer: formData.get('customer') || 'Cliente não informado',
+                payment: formData.get('payment'),
+                items,
+                total: items.reduce((sum, item) => sum + item.total, 0),
+                cost: items.reduce((sum, item) => {
+                    const product = products.find(p => p.id == item.product_id);
+                    return sum + (product.cost * item.quantity);
+                }, 0),
+                date: new Date()
+            };
+
+            // Simular delay da API
+            setTimeout(() => {
+                // Atualizar estoque
+                items.forEach(item => {
+                    const product = products.find(p => p.id == item.product_id);
+                    if (product) {
+                        product.quantity -= item.quantity;
+                        if (product.quantity < 0) product.quantity = 0;
+                    }
+                });
+
+                sales.push(sale);
+                closeModal('sale');
+                showNotification('Venda realizada com sucesso!', 'success');
+                loading.classList.add('hidden');
+
+                // Atualizar dados
+                loadProducts();
+                loadDashboardData();
+            }, 1000);
+        }
+
+        // Utilidades
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(value || 0);
+        }
+
+        function updatePeriod(days) {
+            // Implementar filtro por período
+            showNotification(`Período alterado para ${days} dias`, 'info');
+        }
+
+        function exportData() {
+            showNotification('Exportação iniciada...', 'info');
+            // Implementar exportação
+        }
+
+        function showNotification(message, type = 'success') {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+
+            container.appendChild(notification);
+
+            // Mostrar notificação
+            setTimeout(() => notification.classList.add('show'), 100);
+
+            // Remover após 4 segundos
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => container.removeChild(notification), 300);
+            }, 4000);
+        }
+
+        // Fechar modais clicando fora
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('modal')) {
+                const modalId = e.target.id.replace('-modal', '');
+                closeModal(modalId);
+            }
+        });
+
+        // Fechar sidebar em mobile ao clicar fora
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.sidebar-toggle');
+
+            if (window.innerWidth <= 1024 &&
+                !sidebar.contains(e.target) &&
+                !toggle.contains(e.target) &&
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
